@@ -1,4 +1,4 @@
-# Connect to Autonomous Database using a Wallet
+# Connect to Autonomous Database from Java Application
 
 ## Obtain the wallet
 
@@ -45,8 +45,8 @@
    └── truststore.jks
    ```
 
-   The path to the folder will be passed to the program to connect with the
-   autonomous database.
+   The path to this directory (`~/Downloads/wallet`) will be passed to the
+   program to connect with the autonomous database.
 
 ## Commands
 
