@@ -93,10 +93,21 @@ public class Main {
         }
 
         private static Path readWalletPath(final Console console) throws IllegalArgumentException {
-            String input = console.readLine("Wallet directory: ");
+            /* If there is a directory 'wallet', then use this as a default
+                option otherwise do not provide a default option */
+            final boolean showDefaultOption = Files.isDirectory(Path.of("wallet"));
 
-            /* Replace ~ with the user home directory */
-            if (input.startsWith("~" + File.separator)) {
+            final String message = showDefaultOption
+                    ? "Wallet directory [wallet]: "
+                    : "Wallet directory: ";
+
+            String input = console.readLine(message);
+            if (showDefaultOption && isNullOrBlank(input)) {
+                input = "wallet";
+            } else if (input == null) {
+                throw new IllegalArgumentException("Invalid wallet directory. The provided path is not a directory.");
+            } else if (input.startsWith("~" + File.separator)) {
+                /* Replace ~ with the user home directory */
                 input = System.getProperty("user.home") + input.substring(1);
             }
 
@@ -145,9 +156,13 @@ public class Main {
         }
 
         private static String defaultIfBlank(final String value, final String defaultValue) {
-            return (value == null || value.isBlank())
+            return isNullOrBlank(value)
                     ? defaultValue
                     : value;
+        }
+
+        private static boolean isNullOrBlank(final String value) {
+            return value == null || value.isBlank();
         }
 
         @Override
