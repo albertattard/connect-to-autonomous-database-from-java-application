@@ -1,0 +1,67 @@
+plugins {
+    id 'application'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+application {
+    mainClass = 'demo.Main'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    /* Database */
+    implementation 'com.oracle.database.jdbc:ojdbc11:23.2.0.0'
+    implementation 'com.oracle.database.jdbc:ucp11:23.2.0.0'
+    implementation 'com.oracle.database.security:oraclepki:23.2.0.0'
+
+    /* Logging */
+    implementation 'ch.qos.logback:logback-classic:1.4.7'
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs += ['-Xlint:all', '-Xdiags:verbose']
+}
+
+tasks.named('jar', org.gradle.jvm.tasks.Jar) {
+    archiveBaseName = 'app'
+    archiveClassifier = ''
+    manifest {
+        attributes 'Main-Class': application.mainClass
+        attributes 'Automatic-Module-Name': project.name.replaceAll("-", ".")
+    }
+}
+
+tasks.register('package', Copy) {
+    group = 'distribution'
+    description = "Assembles a (thin) JAR file containing the main classes and copies the runtime dependencies to the ${buildDir}/libs directory"
+
+    dependsOn 'jar'
+    into buildDir
+    into('libs') {
+        from configurations.runtimeClasspath
+    }
+}
+
+tasks.register('fatJar', org.gradle.jvm.tasks.Jar) {
+    group = 'distribution'
+    description = 'Assembles a (fat) JAR file containing the main classes and the runtime dependencies in one (fat) JAR'
+
+    archiveBaseName = 'app'
+    archiveClassifier = 'all-in-one'
+    manifest {
+        attributes 'Main-Class': application.mainClass
+        attributes 'Automatic-Module-Name': project.name.replaceAll("-", ".")
+    }
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
